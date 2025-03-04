@@ -1,3 +1,5 @@
+# requirements.txt 更新內容
+
 # Django 相關套件
 Django
 Pillow
@@ -13,7 +15,13 @@ transformers
 sentence-transformers
 numpy
 
+# 自動標籤生成相關套件
+pytesseract
+scikit-image
+opencv-python
+
 # 工具套件
 requests
 aiohttp
 python-magic
+uuid

@@ -100,3 +100,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Login URL
 LOGIN_URL = '/admin/login/'
+DATA_UPLOAD_MAX_NUMBER_FILES = 1000 

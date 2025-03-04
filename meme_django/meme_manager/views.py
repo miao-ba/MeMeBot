@@ -8,6 +8,14 @@ from .models import MemeCategory, Meme, UserInteraction, ModelConfiguration
 from .forms import MemeCategoryForm, MemeForm, ModelConfigurationForm
 from .tasks import generate_embeddings, generate_embeddings_for_all, reload_models
 from django.views.decorators.csrf import csrf_exempt
+import uuid
+from .auto_tagging import generate_tags_for_image
+from .forms import BatchUploadForm
+from django.conf import settings
+from django.core.files.storage import default_storage
+import os
+from django.core.files.base import ContentFile
+import re
 @login_required
 def dashboard(request):
     total_memes = Meme.objects.count()
@@ -295,3 +303,143 @@ def api_record_interaction(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+def extract_tags_from_filename(filename):
+    """從檔名中提取標籤，格式為【SS0008】後面的文字"""
+    # 移除副檔名
+    base_name = os.path.splitext(filename)[0]
+    
+    # 使用正則表達式匹配格式【SS0008】後面的文字
+    pattern = r'【SS\d+】(.+)'
+    match = re.search(pattern, base_name)
+    
+    if match:
+        # 提取匹配到的文字，並移除空格
+        extracted_text = match.group(1).replace(' ', '')
+        return extracted_text
+    
+    return ""  # 如果沒有匹配到則返回空字串
+
+@login_required
+def batch_upload(request):
+    """批量上傳梗圖並自動生成標籤"""
+    if request.method == 'POST':
+        # 檢查是否有文件上傳
+        if 'images' not in request.FILES:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'error': '請至少選擇一個圖片檔案'})
+            messages.error(request, _("請至少選擇一個圖片檔案"))
+            return redirect('batch_upload')
+            
+        # 獲取表單數據
+        try:
+            category_id = request.POST.get('category')
+            category = MemeCategory.objects.get(id=category_id)
+            auto_generate_tags = request.POST.get('auto_generate_tags') == 'true' or request.POST.get('auto_generate_tags') == 'on'
+            extract_text = request.POST.get('extract_text') == 'true' or request.POST.get('extract_text') == 'on'
+            extract_filename_tags = request.POST.get('extract_filename_tags') == 'true' or request.POST.get('extract_filename_tags') == 'on'
+            
+            images = request.FILES.getlist('images')
+            total = len(images)
+            processed = 0
+            failed = 0
+            
+            for image in images:
+                try:
+                    # 生成唯一檔名
+                    file_ext = os.path.splitext(image.name)[1].lower()
+                    unique_filename = f"{uuid.uuid4().hex}{file_ext}"
+                    
+                    # 儲存到臨時路徑進行處理
+                    temp_path = default_storage.save(f"temp/{unique_filename}", ContentFile(image.read()))
+                    temp_full_path = os.path.join(settings.MEDIA_ROOT, temp_path)
+                    
+                    # 自動生成標籤（如果啟用）
+                    keywords = ""
+                    if auto_generate_tags:
+                        try:
+                            keywords = generate_tags_for_image(temp_full_path)
+                        except Exception as e:
+                            print(f"自動生成標籤時出錯: {str(e)}")
+                    
+                    # 從檔名提取標籤（如果啟用）
+                    if extract_filename_tags:
+                        try:
+                            filename_tags = extract_tags_from_filename(image.name)
+                            if filename_tags:
+                                if keywords:
+                                    keywords += "," + filename_tags
+                                else:
+                                    keywords = filename_tags
+                        except Exception as e:
+                            print(f"從檔名提取標籤時出錯: {str(e)}")
+                    
+                    # 生成檔案存放路徑
+                    file_path = f"memes/{unique_filename}"
+                    final_path = os.path.join(settings.MEDIA_ROOT, file_path)
+                    
+                    # 確保目錄存在
+                    os.makedirs(os.path.dirname(final_path), exist_ok=True)
+                    
+                    # 移動檔案到最終位置
+                    os.rename(temp_full_path, final_path)
+                    
+                    # 從檔名猜測標題（移除副檔名和特殊字元）
+                    title = os.path.splitext(image.name)[0].replace('_', ' ').replace('-', ' ')
+                    
+                    # 創建梗圖記錄
+                    meme = Meme.objects.create(
+                        title=title,
+                        image=file_path,
+                        category=category,
+                        keywords=keywords
+                    )
+                    
+                    # 在背景產生嵌入向量
+                    generate_embeddings(meme.id)
+                    
+                    processed += 1
+                    
+                except Exception as e:
+                    print(f"處理圖片 {image.name} 時出錯: {str(e)}")
+                    failed += 1
+            
+            # 清除API快取
+            clear_bot_cache()
+            
+            # 顯示上傳結果訊息
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                # AJAX响应
+                return JsonResponse({
+                    'success': True,
+                    'processed': processed,
+                    'failed': failed,
+                    'redirect_url': '/memes/'  # 調整為正確的URLs
+                })
+            else:
+                # 普通表單提交
+                if failed == 0:
+                    messages.success(request, _("已成功上傳 {processed} 張梗圖。").format(processed=processed))
+                else:
+                    messages.warning(
+                        request, 
+                        _("已上傳 {processed} 張梗圖，但有 {failed} 張處理失敗。").format(
+                            processed=processed, 
+                            failed=failed
+                        )
+                    )
+                
+                return redirect('meme_list')
+        except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'error': str(e)})
+            messages.error(request, str(e))
+            return redirect('batch_upload')
+    else:
+        form = BatchUploadForm()
+    
+    context = {
+        'form': form,
+        'title': _('批量上傳梗圖'),
+    }
+    
+    return render(request, 'meme_manager/batch_upload.html', context)

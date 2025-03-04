@@ -1,3 +1,5 @@
+# meme_django/meme_manager/urls.py 更新內容
+
 from django.urls import path
 from . import views
 
@@ -7,6 +9,7 @@ urlpatterns = [
     path('memes/add/', views.add_meme, name='add_meme'),
     path('memes/edit/<int:meme_id>/', views.edit_meme, name='edit_meme'),
     path('memes/delete/<int:meme_id>/', views.delete_meme, name='delete_meme'),
+    path('memes/batch-upload/', views.batch_upload, name='batch_upload'),  # 新增：批量上傳路由
     path('categories/', views.category_list, name='category_list'),
     path('categories/add/', views.add_category, name='add_category'),
     path('categories/edit/<int:category_id>/', views.edit_category, name='edit_category'),
