@@ -1,0 +1,189 @@
+/* 全局樣式 */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+  }
+  
+  body {
+    font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+    background-color: #f5f5f5;
+  }
+  
+  /* 頁頭和導航 */
+  .navbar-brand {
+    font-weight: bold;
+  }
+  
+  .nav-link .fas, 
+  .nav-link .far {
+    width: 20px;
+    text-align: center;
+  }
+  
+  /* 卡片樣式 */
+  .card {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-header {
+    font-weight: 600;
+    background-color: rgba(13, 110, 253, 0.05);
+  }
+  
+  /* 表單樣式 */
+  .form-label {
+    font-weight: 600;
+  }
+  
+  .form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+  
+  /* 按鈕樣式 */
+  .btn {
+    font-weight: 500;
+    border-radius: 4px;
+  }
+  
+  .btn .fas, 
+  .btn .far {
+    margin-right: 5px;
+  }
+  
+  /* 表格樣式 */
+  .table th {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+  }
+  
+  /* 梗圖卡片樣式 */
+  .meme-card {
+    transition: transform 0.2s;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .meme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .meme-image {
+    height: 200px;
+    object-fit: contain;
+    background-color: #f8f9fa;
+    padding: 10px;
+  }
+  
+  /* 預覽樣式 */
+  .preview-container {
+    border: 1px dashed #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  
+  #preview-image {
+    max-height: 300px;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  /* 統計卡片 */
+  .stat-card {
+    border-radius: 10px;
+    overflow: hidden;
+    height: 100%;
+  }
+  
+  .stat-card .card-body {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .stat-card .stat-icon {
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    font-size: 6rem;
+    opacity: 0.2;
+    z-index: 0;
+  }
+  
+  /* 頁碼控制 */
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .pagination-controls .btn {
+    margin: 0 5px;
+  }
+  
+  /* 提示訊息 */
+  .alert {
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* 頁腳 */
+  footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    color: #6c757d;
+    padding: 20px 0;
+    margin-top: 50px;
+  }
+  
+  /* 響應式調整 */
+  @media (max-width: 768px) {
+    .display-4, .display-5 {
+      font-size: 1.8rem;
+    }
+    
+    .lead {
+      font-size: 1rem;
+    }
+  }
+  
+  /* 互動歷史表格 */
+  .interaction-table td {
+    vertical-align: middle;
+  }
+  
+  /* 模型設定表單 */
+  .model-config-card {
+    border-left: 4px solid var(--primary-color);
+  }
+  
+  .active-model {
+    border-left: 4px solid var(--success-color);
+    background-color: rgba(25, 135, 84, 0.05);
+  }

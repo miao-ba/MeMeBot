@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}模型設定 - 海綿寶寶梗圖推薦系統{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            <i class="fas fa-cogs me-2"></i>模型設定
+        </h1>
+        <p class="lead text-muted">管理AI模型配置</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- 現有模型設定 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-list me-1"></i>已保存的模型設定
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>設定名稱</th>
+                                <th>NLP模型</th>
+                                <th>CV模型</th>
+                                <th>狀態</th>
+                                <th>建立時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for config in configs %}
+                            <tr class="{% if config.active %}table-success{% endif %}">
+                                <td>{{ config.name }}</td>
+                                <td>{{ config.nlp_model_path|default:"預設" }}</td>
+                                <td>{{ config.cv_model_path|default:"預設" }}</td>
+                                <td>
+                                    {% if config.active %}
+                                    <span class="badge bg-success">已啟用</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">未啟用</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ config.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if not config.active %}
+                                    <form action="{% url 'activate_config' config.id %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">目前沒有保存的模型設定。您可以使用下方表單新增模型設定。</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 新增模型設定 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-plus me-1"></i>新增模型設定
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">設定名稱</label>
+                        {{ form.name.errors }}
+                        <input type="text" name="name" id="id_name" class="form-control {% if form.name.errors %}is-invalid{% endif %}" value="{{ form.name.value|default:'' }}" required>
+                        <div class="form-text">為此配置指定一個易於識別的名稱</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_nlp_model_path" class="form-label">NLP模型路徑</label>
+                        {{ form.nlp_model_path.errors }}
+                        <input type="text" name="nlp_model_path" id="id_nlp_model_path" class="form-control {% if form.nlp_model_path.errors %}is-invalid{% endif %}" value="{{ form.nlp_model_path.value|default:'' }}">
+                        <div class="form-text">預訓練模型名稱（如「distilbert-base-multilingual-cased」）或本地模型路徑，留空使用預設</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_cv_model_path" class="form-label">CV模型路徑</label>
+                        {{ form.cv_model_path.errors }}
+                        <input type="text" name="cv_model_path" id="id_cv_model_path" class="form-control {% if form.cv_model_path.errors %}is-invalid{% endif %}" value="{{ form.cv_model_path.value|default:'' }}">
+                        <div class="form-text">預訓練模型名稱（如「resnet50」或「resnet18」）或本地模型路徑，留空使用預設</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="active" id="id_active" class="form-check-input" {% if form.active.value %}checked{% endif %}>
+                        <label for="id_active" class="form-check-label">設為啟用狀態</label>
+                        <div class="form-text">啟用此設定將自動停用其他設定</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>儲存設定
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- 當前啟用的設定 -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-check-circle me-1"></i>當前啟用的設定
+            </div>
+            <div class="card-body">
+                {% if active_config %}
+                <h5 class="card-title">{{ active_config.name }}</h5>
+                <p class="card-text">
+                    <strong>NLP模型:</strong> {{ active_config.nlp_model_path|default:"預設" }}<br>
+                    <strong>CV模型:</strong> {{ active_config.cv_model_path|default:"預設" }}<br>
+                    <strong>啟用時間:</strong> {{ active_config.created_at|date:"Y-m-d H:i" }}
+                </p>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-exclamation-circle me-1"></i>目前沒有啟用的模型設定，系統將使用預設配置。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 說明 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i>使用說明
+            </div>
+            <div class="card-body">
+                <h5>關於模型設定</h5>
+                <ul>
+                    <li>模型設定控制系統使用的AI模型</li>
+                    <li>NLP模型用於處理文字，CV模型用於處理圖片</li>
+                    <li>只能有一個啟用的模型設定</li>
+                    <li>更改設定後需要重新生成嵌入向量才能完全生效</li>
+                </ul>
+                
+                <h5>預設模型</h5>
+                <ul>
+                    <li>NLP預設: distilbert-base-multilingual-cased</li>
+                    <li>CV預設: resnet50</li>
+                </ul>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <form action="{% url 'regenerate_all_embeddings' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-sync-alt me-1"></i>重新生成所有嵌入向量
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

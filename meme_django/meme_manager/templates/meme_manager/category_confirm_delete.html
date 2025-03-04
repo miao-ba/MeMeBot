@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}刪除類別 - 海綿寶寶梗圖推薦系統{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            <i class="fas fa-trash me-2"></i>刪除類別
+        </h1>
+        <p class="lead text-muted">確認刪除此類別</p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>返回列表
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header text-white bg-danger">
+        <i class="fas fa-exclamation-triangle me-1"></i>刪除確認
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-circle me-1"></i>警告：刪除此類別將同時刪除屬於此類別的所有梗圖！此操作無法撤銷！
+        </div>
+        
+        <p>您確定要刪除以下類別嗎？</p>
+        <ul>
+            <li><strong>類別名稱:</strong> {{ category.name }}</li>
+            <li><strong>類別描述:</strong> {{ category.description|default:"無" }}</li>
+            <li><strong>建立時間:</strong> {{ category.created_at|date:"Y-m-d H:i" }}</li>
+            <li><strong>包含梗圖數量:</strong> {{ category.memes.count }}</li>
+        </ul>
+        
+        {% if category.memes.count > 0 %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle me-1"></i>此類別下有 {{ category.memes.count }} 張梗圖，刪除類別將同時刪除這些梗圖！
+        </div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'category_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>取消
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>確認刪除
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

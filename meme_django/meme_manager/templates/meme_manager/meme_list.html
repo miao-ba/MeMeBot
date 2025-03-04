@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}梗圖管理 - 海綿寶寶梗圖推薦系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    .meme-card {
+        transition: transform 0.2s;
+    }
+    .meme-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .meme-image {
+        height: 200px;
+        object-fit: contain;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            <i class="fas fa-images me-2"></i>梗圖管理
+        </h1>
+        <p class="lead text-muted">管理系統中的海綿寶寶梗圖</p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'add_meme' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>新增梗圖
+        </a>
+    </div>
+</div>
+
+<!-- 過濾選項 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-filter me-1"></i>過濾選項
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="category" class="form-label">類別</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">所有類別</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-1"></i>套用過濾
+                </button>
+                <a href="{% url 'meme_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>清除過濾
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 梗圖列表 -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for meme in memes %}
+    <div class="col">
+        <div class="card h-100 meme-card">
+            <img src="{{ meme.image.url }}" class="card-img-top meme-image" alt="{{ meme.title }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ meme.title }}</h5>
+                <p class="card-text">
+                    <span class="badge bg-primary">{{ meme.category.name }}</span>
+                    <small class="text-muted d-block mt-2">{{ meme.keywords }}</small>
+                </p>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100">
+                    <a href="{% url 'edit_meme' meme.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>編輯
+                    </a>
+                    <a href="{% url 'delete_meme' meme.id %}" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash me-1"></i>刪除
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            目前沒有梗圖。<a href="{% url 'add_meme' %}" class="alert-link">點擊這裡</a>新增梗圖。
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

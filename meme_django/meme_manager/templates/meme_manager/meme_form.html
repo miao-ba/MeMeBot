@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - 海綿寶寶梗圖推薦系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    #preview-image {
+        max-height: 300px;
+        object-fit: contain;
+        background-color: #f8f9fa;
+    }
+    .preview-container {
+        border: 1px dashed #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        text-align: center;
+    }
+    .hidden {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            <i class="fas fa-{% if meme %}edit{% else %}plus{% endif %} me-2"></i>{{ title }}
+        </h1>
+        <p class="lead text-muted">
+            {% if meme %}更新梗圖資訊{% else %}新增海綿寶寶梗圖{% endif %}
+        </p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'meme_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>返回列表
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-alt me-1"></i>梗圖資訊
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">標題</label>
+                        {{ form.title.errors }}
+                        <input type="text" name="title" id="id_title" class="form-control {% if form.title.errors %}is-invalid{% endif %}" value="{{ form.title.value|default:'' }}" required>
+                        {% if form.title.help_text %}
+                        <div class="form-text">{{ form.title.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_category" class="form-label">類別</label>
+                        {{ form.category.errors }}
+                        <select name="category" id="id_category" class="form-select {% if form.category.errors %}is-invalid{% endif %}" required>
+                            <option value="">---------</option>
+                            {% for category in form.category.field.queryset %}
+                            <option value="{{ category.id }}" {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.category.help_text %}
+                        <div class="form-text">{{ form.category.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_keywords" class="form-label">關鍵字</label>
+                        {{ form.keywords.errors }}
+                        <textarea name="keywords" id="id_keywords" class="form-control {% if form.keywords.errors %}is-invalid{% endif %}" rows="3">{{ form.keywords.value|default:'' }}</textarea>
+                        <div class="form-text">{{ form.keywords.help_text|default:"請輸入與梗圖相關的關鍵字，以逗號分隔" }}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_image" class="form-label">圖片</label>
+                        {{ form.image.errors }}
+                        <input type="file" name="image" id="id_image" class="form-control {% if form.image.errors %}is-invalid{% endif %}" accept="image/*" {% if not meme %}required{% endif %}>
+                        {% if form.image.help_text %}
+                        <div class="form-text">{{ form.image.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>儲存梗圖
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-image me-1"></i>圖片預覽
+            </div>
+            <div class="card-body">
+                <div class="preview-container">
+                    {% if meme and meme.image %}
+                    <img id="preview-image" src="{{ meme.image.url }}" alt="{{ meme.title }}">
+                    {% else %}
+                    <div id="no-preview" class="py-5">
+                        <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">選擇圖片後將顯示預覽</p>
+                    </div>
+                    <img id="preview-image" class="hidden" src="#" alt="圖片預覽">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if meme %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i>其他資訊
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>建立時間</span>
+                        <span>{{ meme.created_at|date:"Y-m-d H:i" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>是否有文字向量</span>
+                        <span>{% if meme.embedding %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>是否有圖片特徵</span>
+                        <span>{% if meme.image_features %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('id_image');
+    const previewImage = document.getElementById('preview-image');
+    const noPreview = document.getElementById('no-preview');
+    
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('hidden');
+                if (noPreview) {
+                    noPreview.classList.add('hidden');
+                }
+            }
+            
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+});
+</script>
+{% endblock %}

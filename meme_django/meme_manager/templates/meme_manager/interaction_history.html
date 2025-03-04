@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}互動記錄 - 海綿寶寶梗圖推薦系統{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            <i class="fas fa-history me-2"></i>互動記錄
+        </h1>
+        <p class="lead text-muted">查看用戶與機器人的互動記錄</p>
+    </div>
+</div>
+
+<!-- 統計卡片 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">總互動次數</h5>
+                        <h2 class="display-4">{{ interactions|length }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-4x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">有圖片的互動</h5>
+                        <h2 class="display-4">
+                            {{ interactions|dictsortreversed:"input_image"|length }}
+                        </h2>
+                    </div>
+                    <i class="fas fa-image fa-4x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">不同用戶數</h5>
+                        <h2 class="display-4">
+                            {{ interactions|dictsortreversed:"user_id"|length }}
+                        </h2>
+                    </div>
+                    <i class="fas fa-user-friends fa-4x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 互動摘要 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-chart-line me-1"></i>互動摘要
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-1"></i>互動時間資訊
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>最早互動:</strong> 
+                                {% if interactions %}
+                                    {% for interaction in interactions %}
+                                        {% if forloop.first %}  <!-- 這會顯示第一個（最新的）互動 -->
+                                            {{ interaction.interaction_time|date:"Y-m-d H:i" }}
+                                        {% endif %}
+                                    {% endfor %}
+                                 {% else %}
+                                無
+                                {% endif %}<br>
+                            
+                            <strong>最近互動:</strong> 
+                            {% if interactions %}
+                                {% with first_interaction=interactions|first %}
+                                    {% if first_interaction.interaction_time %}
+                                        {{ first_interaction.interaction_time|date:"Y-m-d H:i" }}
+                                    {% else %}
+                                        無日期資料
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                無
+                            {% endif %}<br>
+                            
+                            <strong>總互動次數:</strong> {{ interactions|length }}<br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="fas fa-search me-1"></i>查詢方式統計
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>文字查詢:</strong> 
+                            {% with text_count=0 %}
+                                {% for interaction in interactions %}
+                                    {% if interaction.input_text and not interaction.input_image %}
+                                        {% with text_count=text_count|add:1 %}{% endwith %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ text_count }}
+                            {% endwith %}<br>
+                            
+                            <strong>圖片查詢:</strong> 
+                            {% with image_count=0 %}
+                                {% for interaction in interactions %}
+                                    {% if interaction.input_image and not interaction.input_text %}
+                                        {% with image_count=image_count|add:1 %}{% endwith %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ image_count }}
+                            {% endwith %}<br>
+                            
+                            <strong>混合查詢:</strong> 
+                            {% with mixed_count=0 %}
+                                {% for interaction in interactions %}
+                                    {% if interaction.input_image and interaction.input_text %}
+                                        {% with mixed_count=mixed_count|add:1 %}{% endwith %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ mixed_count }}
+                            {% endwith %}<br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 互動記錄表格 -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-table me-1"></i>詳細互動記錄
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>使用者ID</th>
+                        <th>輸入文字</th>
+                        <th>圖片輸入</th>
+                        <th>推薦梗圖</th>
+                        <th>互動時間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interaction in interactions %}
+                    <tr>
+                        <td>{{ interaction.user_id }}</td>
+                        <td>
+                            {% if interaction.input_text %}
+                            <div class="text-truncate" style="max-width: 200px;" title="{{ interaction.input_text }}">
+                                {{ interaction.input_text }}
+                            </div>
+                            {% else %}
+                            <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if interaction.input_image %}
+                            <i class="fas fa-check-circle text-success"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle text-secondary"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if interaction.recommended_meme %}
+                            <a href="{% url 'edit_meme' interaction.recommended_meme.id %}">
+                                {{ interaction.recommended_meme.title|truncatechars:30 }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">無推薦</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if interaction.interaction_time %}
+                            {{ interaction.interaction_time|date:"Y-m-d H:i" }}
+                            {% else %}
+                            <span class="text-muted">無時間資料</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>尚無互動記錄
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

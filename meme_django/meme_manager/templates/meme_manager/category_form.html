@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - 海綿寶寶梗圖推薦系統{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            <i class="fas fa-{% if category %}edit{% else %}plus{% endif %} me-2"></i>{{ title }}
+        </h1>
+        <p class="lead text-muted">
+            {% if category %}更新類別資訊{% else %}新增梗圖類別{% endif %}
+        </p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>返回列表
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-alt me-1"></i>類別資訊
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">類別名稱</label>
+                        {{ form.name.errors }}
+                        <input type="text" name="name" id="id_name" class="form-control {% if form.name.errors %}is-invalid{% endif %}" value="{{ form.name.value|default:'' }}" required>
+                        {% if form.name.help_text %}
+                        <div class="form-text">{{ form.name.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">類別描述</label>
+                        {{ form.description.errors }}
+                        <textarea name="description" id="id_description" class="form-control {% if form.description.errors %}is-invalid{% endif %}" rows="3">{{ form.description.value|default:'' }}</textarea>
+                        <div class="form-text">可選，說明此類別的用途或包含的梗圖類型</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>儲存類別
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% if category %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i>類別資訊
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>建立時間</span>
+                        <span>{{ category.created_at|date:"Y-m-d H:i" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>梗圖數量</span>
+                        <span>{{ category.memes.count }}</span>
+                    </li>
+                </ul>
+                <div class="mt-3">
+                    <a href="{% url 'meme_list' %}?category={{ category.id }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-images me-1"></i>查看此類別下的梗圖
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

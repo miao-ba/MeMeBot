@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}儀表板 - 海綿寶寶梗圖推薦系統{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            <i class="fas fa-tachometer-alt me-2"></i>系統儀表板
+        </h1>
+        <p class="lead text-muted">系統狀態和統計資訊</p>
+    </div>
+    <div class="col-auto">
+        <div class="d-flex gap-2">
+            <a href="{% url 'meme_list' %}" class="btn btn-primary">
+                <i class="fas fa-images me-1"></i>管理梗圖
+            </a>
+            <form action="{% url 'regenerate_all_embeddings' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-sync-alt me-1"></i>重新產生所有嵌入向量
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 統計卡片 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">總梗圖數量</h5>
+                        <h2 class="display-4">{{ total_memes }}</h2>
+                    </div>
+                    <i class="fas fa-images fa-4x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="{% url 'meme_list' %}" class="text-white stretched-link">查看詳情</a>
+                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">梗圖類別數量</h5>
+                        <h2 class="display-4">{{ total_categories }}</h2>
+                    </div>
+                    <i class="fas fa-tags fa-4x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="{% url 'category_list' %}" class="text-white stretched-link">查看詳情</a>
+                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近互動記錄 -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-history me-1"></i>
+            最近的互動記錄
+        </div>
+        <a href="{% url 'interaction_history' %}" class="btn btn-sm btn-outline-primary">
+            查看全部
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>使用者</th>
+                        <th>輸入文字</th>
+                        <th>圖片輸入</th>
+                        <th>推薦梗圖</th>
+                        <th>時間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interaction in recent_interactions %}
+                    <tr>
+                        <td>{{ interaction.user_id }}</td>
+                        <td>{{ interaction.input_text|truncatechars:30 }}</td>
+                        <td>{% if interaction.input_image %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-muted"></i>{% endif %}</td>
+                        <td>
+                            {% if interaction.recommended_meme %}
+                            <a href="{% url 'edit_meme' interaction.recommended_meme.id %}">{{ interaction.recommended_meme.title|truncatechars:30 }}</a>
+                            {% else %}
+                            <span class="text-muted">無</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ interaction.interaction_time|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">目前沒有互動記錄</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

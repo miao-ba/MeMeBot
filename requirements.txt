@@ -1,0 +1,19 @@
+# Django 相關套件
+Django
+Pillow
+
+# Discord 相關套件
+discord.py
+python-dotenv
+
+# AI 模型相關套件
+torch
+torchvision
+transformers
+sentence-transformers
+numpy
+
+# 工具套件
+requests
+aiohttp
+python-magic
